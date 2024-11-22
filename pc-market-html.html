@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>PC Market Opportunity</title>
+    <!-- Load React -->
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/react/17.0.2/umd/react.development.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/react-dom/17.0.2/umd/react-dom.development.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/prop-types/15.7.2/prop-types.min.js'></script>
+    <!-- Load D3 (required by Recharts) -->
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js'></script>
+    <!-- Load Recharts UMD build -->
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/recharts/2.1.12/Recharts.min.js'></script>
+    <!-- Load Babel -->
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js'></script>
+    <!-- Load Tailwind -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        // Destructure React hooks
+        const { useState, useMemo } = React;
+
+        function PCMarketOpportunity() {
+            const [view, setView] = useState('market');
+            const [armShare, setArmShare] = useState(40);
+            const [qualcommShare, setQualcommShare] = useState(60);
+
+            const GOLD = '#FFB81C';
+            const ORANGE = '#FF6B2C';
+
+            const TOTAL_MARKET = 210;
+            const TOTAL_TAM = 35;
+            const QUALCOMM_TARGET_REVENUE = 4;
+
+            const calculations = useMemo(() => {
+                const armUnits = (TOTAL_MARKET * armShare) / 100;
+                const qualcommUnits = (armUnits * qualcommShare) / 100;
+                const marketAverageAsp = (TOTAL_TAM * 1000) / TOTAL_MARKET;
+                const qualcommAsp = (QUALCOMM_TARGET_REVENUE * 1000) / qualcommUnits;
+                const revenueShare = (QUALCOMM_TARGET_REVENUE / TOTAL_TAM) * 100;
+
+                const marketData = [
+                    { name: 'Total Market', units: TOTAL_MARKET, revenue: TOTAL_TAM },
+                    { name: 'ARM/Non-x86', units: armUnits, revenue: (armUnits * marketAverageAsp) / 1000 },
+                    { name: 'Qualcomm Target', units: qualcommUnits, revenue: QUALCOMM_TARGET_REVENUE }
+                ];
+
+                const growthData = [
+                    { year: 2024, total: 185, arm: armUnits * 0.2, qualcomm: qualcommUnits * 0.2 },
+                    { year: 2025, total: 190, arm: armUnits * 0.4, qualcomm: qualcommUnits * 0.4 },
+                    { year: 2026, total: 195, arm: armUnits * 0.6, qualcomm: qualcommUnits * 0.6 },
+                    { year: 2027, total: 200, arm: armUnits * 0.8, qualcomm: qualcommUnits * 0.8 },
+                    { year: 2028, total: 205, arm: armUnits * 0.9, qualcomm: qualcommUnits * 0.9 },
+                    { year: 2029, total: TOTAL_MARKET, arm: armUnits, qualcomm: qualcommUnits }
+                ];
+
+                return { armUnits, qualcommUnits, marketAverageAsp, qualcommAsp, revenueShare, marketData, growthData };
+            }, [armShare, qualcommShare]);
+
+            const renderMarketChart = () => (
+                <Recharts.BarChart data={calculations.marketData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }} width={800} height={400}>
+                    <Recharts.CartesianGrid strokeDasharray="3 3" />
+                    <Recharts.XAxis dataKey="name" />
+                    <Recharts.YAxis yAxisId="left" label={{ value: 'Units (M)', angle: -90, position: 'insideLeft' }} />
+                    <Recharts.YAxis yAxisId="right" orientation="right" label={{ value: 'Revenue ($B)', angle: 90, position: 'insideRight' }} />
+                    <Recharts.Tooltip />
+                    <Recharts.Legend />
+                    <Recharts.Bar yAxisId="left" dataKey="units" name="Units (M)" fill={GOLD} />
+                    <Recharts.Bar yAxisId="right" dataKey="revenue" name="Revenue ($B)" fill={ORANGE} />
+                </Recharts.BarChart>
+            );
+
+            const renderGrowthChart = () => (
+                <Recharts.AreaChart data={calculations.growthData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }} width={800} height={400}>
+                    <Recharts.CartesianGrid strokeDasharray="3 3" />
+                    <Recharts.XAxis dataKey="year" />
+                    <Recharts.YAxis />
+                    <Recharts.Tooltip />
+                    <Recharts.Legend />
+                    <Recharts.Area type="monotone" dataKey="total" name="Total Market (M)" fill={GOLD} stroke={GOLD} />
+                    <Recharts.Area type="monotone" dataKey="arm" name="ARM/Non-x86 (M)" fill={ORANGE} stroke={ORANGE} />
+                    <Recharts.Area type="monotone" dataKey="qualcomm" name="Qualcomm (M)" fill="#FF8B4C" stroke="#FF8B4C" />
+                </Recharts.AreaChart>
+            );
+
+            return (
+                <div className="w-full max-w-4xl mx-auto">
+                    <div className="bg-white p-6 rounded-lg shadow">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-semibold">2029 PC Market Opportunity</h2>
+                            <div className="space-x-2">
+                                <button 
+                                    onClick={() => setView('market')} 
+                                    className={`px-4 py-2 rounded ${view === 'market' ? 'bg-orange-500 text-white' : 'bg-gray-200'}`}
+                                >
+                                    Market View
+                                </button>
+                                <button 
+                                    onClick={() => setView('growth')} 
+                                    className={`px-4 py-2 rounded ${view === 'growth' ? 'bg-orange-500 text-white' : 'bg-gray-200'}`}
+                                >
+                                    Growth View
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-center">
+                            {view === 'market' ? renderMarketChart() : renderGrowthChart()}
+                        </div>
+
+                        <div className="mt-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">ARM/Non-x86 Market Share: {armShare}%</label>
+                                <input 
+                                    type="range" 
+                                    min="0" 
+                                    max="100" 
+                                    value={armShare} 
+                                    onChange={(e) => setArmShare(Number(e.target.value))} 
+                                    className="w-full"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Qualcomm Share of ARM: {qualcommShare}%</label>
+                                <input 
+                                    type="range" 
+                                    min="0" 
+                                    max="100" 
+                                    value={qualcommShare} 
+                                    onChange={(e) => setQualcommShare(Number(e.target.value))} 
+                                    className="w-full"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="mt-4 text-sm text-gray-600">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="font-semibold">Market Calculations:</p>
+                                    <ul className="list-disc ml-6">
+                                        <li>Total PC Market: {TOTAL_MARKET}M units</li>
+                                        <li>ARM/Non-x86: {calculations.armUnits.toFixed(1)}M units</li>
+                                        <li>Qualcomm Target: {calculations.qualcommUnits.toFixed(1)}M units</li>
+                                        <li>Market Avg ASP: ${calculations.marketAverageAsp.toFixed(2)}</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <p className="font-semibold">Revenue Metrics:</p>
+                                    <ul className="list-disc ml-6">
+                                        <li>Total TAM: ${TOTAL_TAM}B</li>
+                                        <li>Qualcomm Target: ${QUALCOMM_TARGET_REVENUE}B</li>
+                                        <li>Qualcomm ASP: ${calculations.qualcommAsp.toFixed(2)}</li>
+                                        <li>Revenue Share: {calculations.revenueShare.toFixed(1)}% of TAM</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Render the app
+        ReactDOM.render(<PCMarketOpportunity />, document.getElementById('root'));
+    </script>
+</body>
+</html>
